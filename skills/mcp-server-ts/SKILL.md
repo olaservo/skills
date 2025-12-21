@@ -79,7 +79,12 @@ Review the snippet catalog below to identify patterns that match your needs:
 
 ### 1.3 Check Client Compatibility
 
-See [Client Compatibility Matrix](#client-compatibility-matrix) to ensure your target host supports required features.
+Use the MCP docs server to look up current client capabilities:
+- Query for "Claude Desktop capabilities" or "Claude Code MCP support"
+- Check transport support (stdio vs Streamable HTTP)
+- Verify feature support (tools, resources, prompts, sampling, etc.)
+
+> **Note:** Client capabilities change frequently. Always check the latest MCP documentation rather than relying on static compatibility matrices.
 
 ---
 
@@ -236,34 +241,35 @@ The Inspector lets you:
 
 ---
 
-## Client Compatibility Matrix
-
-| Feature | Claude Desktop | Claude Code | MCP Inspector |
-|---------|---------------|-------------|---------------|
-| stdio transport | Yes | Yes | Yes |
-| Streamable HTTP | No | Yes | Yes |
-| Tools | Yes | Yes | Yes |
-| Resources | Limited | Yes | Yes |
-| Prompts | Yes | Yes | Yes |
-| Progress notifications | Yes | Yes | Yes |
-| Sampling (LLM calls) | Capability-dependent | Capability-dependent | Yes |
-| Elicitation (user input) | No | Capability-dependent | Yes |
-| Roots | No | Yes | Yes |
-
-**Notes:**
-- Claude Desktop primarily supports stdio transport
-- Advanced features like sampling require checking client capabilities at runtime
-- Use MCP Inspector for manual testing
-
----
-
 ## Reference Files
 
 For deeper guidance, load these reference documents:
 
 - [TypeScript SDK Patterns](./reference/typescript_sdk_patterns.md) - SDK imports, registration patterns, error handling
 - [MCP Primitives Guide](./reference/mcp_primitives_guide.md) - Tool, Resource, Prompt specifications from MCP spec
-- [Client Compatibility](./reference/client_compatibility.md) - Detailed host/client limitations and workarounds
+
+---
+
+## MCP Documentation Server
+
+For up-to-date client compatibility info and protocol details, use the MCP docs server:
+
+```json
+{
+  "mcpServers": {
+    "mcp-docs": {
+      "type": "http",
+      "url": "https://modelcontextprotocol.io/mcp"
+    }
+  }
+}
+```
+
+This provides live access to:
+- Client capability matrices
+- Protocol specification updates
+- SDK documentation
+- Best practices
 
 ---
 
