@@ -271,7 +271,7 @@ For deeper guidance, load these reference documents:
 
 ## MCP Documentation Server
 
-For up-to-date protocol details and server information, use the MCP docs server:
+For up-to-date protocol details, use the MCP docs server:
 
 ```json
 {
@@ -283,6 +283,11 @@ For up-to-date protocol details and server information, use the MCP docs server:
   }
 }
 ```
+
+Query the docs server for:
+- "Example clients" - includes examples of both open source and closed source MCP clients
+- Client feature support
+- Protocol specification updates
 
 ---
 
