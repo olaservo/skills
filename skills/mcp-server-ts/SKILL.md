@@ -1,0 +1,275 @@
+---
+name: mcp-server-ts
+description: Build TypeScript MCP servers with composable code snippets from the official Everything reference server. Use the add script to selectively copy tool, resource, or prompt modules. Use when creating MCP servers.
+---
+
+# TypeScript MCP Server Builder
+
+Build MCP (Model Context Protocol) servers in TypeScript by referencing code snippets from the official Everything reference server.
+
+## How It Works
+
+1. **Browse** the snippet catalog below or in `snippets/`
+2. **Copy** the snippets you need into your project
+3. **Customize** the copied code for your use case
+4. **Register** your tools/resources/prompts with the server
+
+Snippets are bundled in this skill. Run `scripts/add.sh --update` to refresh from GitHub.
+
+---
+
+## Quick Start Decision Trees
+
+### What MCP Primitive Should I Use?
+
+```
+Need to perform actions with side effects?
+  └─> Use TOOLS (model-controlled)
+      Examples: API calls, file operations, computations
+
+Need to expose data for LLM context?
+  └─> Is data relatively static or URI-addressable?
+      └─> Use RESOURCES (application-controlled)
+          Examples: file contents, database records, API responses
+  └─> Need parameterized access patterns?
+      └─> Use Resource Templates with URI variables
+          Example: myapp://users/{userId}/profile
+
+Need user-initiated commands/slash commands?
+  └─> Use PROMPTS (user-controlled)
+      Examples: /summarize, /translate, /analyze
+```
+
+### What Transport Should I Use?
+
+```
+Local integration (subprocess, CLI, Claude Desktop)?
+  └─> Use stdio transport (default)
+
+Remote service, multi-client, or web deployment?
+  └─> Use Streamable HTTP transport
+```
+
+---
+
+## Phase 1: Research
+
+### 1.1 Identify Your Integration
+
+Before writing code, understand:
+- What API/service are you integrating?
+- What operations do users need to perform?
+- What data should be exposed to the LLM?
+
+### 1.2 Browse Available Snippets
+
+Review the snippet catalog below to identify patterns that match your needs:
+
+| Snippet | Description | Best For |
+|---------|-------------|----------|
+| `server-setup` | Basic McpServer with stdio | Starting any new server |
+| `tool-basic` | Simple tool with Zod schema | API calls, simple operations |
+| `tool-progress` | Tool with progress notifications | Long-running operations |
+| `tool-annotations` | Tool with semantic hints | Indicating read-only/destructive ops |
+| `tool-output-schema` | Tool with structured output | Typed responses |
+| `resource-static` | Static resource registration | Files, configs, static data |
+| `resource-template` | Dynamic URI template resource | Parameterized data access |
+| `prompt-basic` | Simple prompt | Basic user commands |
+| `prompt-args` | Prompt with arguments | Parameterized commands |
+
+### 1.3 Check Client Compatibility
+
+See [Client Compatibility Matrix](#client-compatibility-matrix) to ensure your target host supports required features.
+
+---
+
+## Phase 2: Implement
+
+### 2.1 Initialize Project
+
+```bash
+mkdir my-mcp-server && cd my-mcp-server
+npm init -y
+npm install @modelcontextprotocol/sdk zod
+npm install -D typescript @types/node
+npx tsc --init
+```
+
+Update `tsconfig.json`:
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "outDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true
+  }
+}
+```
+
+Update `package.json`:
+```json
+{
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  }
+}
+```
+
+### 2.2 Add Snippets
+
+Copy snippets from this skill's `snippets/` directory into your project. The snippets are organized by category:
+
+```
+snippets/
+├── server/index.ts           # Server setup
+├── tools/                    # Tool examples
+│   ├── echo.ts
+│   ├── trigger-long-running-operation.ts
+│   ├── get-annotated-message.ts
+│   └── get-structured-content.ts
+├── resources/                # Resource examples
+│   ├── files.ts
+│   └── templates.ts
+└── prompts/                  # Prompt examples
+    ├── simple.ts
+    └── args.ts
+```
+
+**Using the add script** (from the skill directory):
+```bash
+# List available snippets
+./scripts/add.sh --list
+
+# Copy snippet to a project directory
+./scripts/add.sh server-setup /path/to/my-mcp-server/src
+./scripts/add.sh tool-basic /path/to/my-mcp-server/src
+
+# Refresh snippets from GitHub
+./scripts/add.sh --update
+```
+
+**Or copy directly:**
+```bash
+cp snippets/server/index.ts /path/to/my-mcp-server/src/
+cp snippets/tools/echo.ts /path/to/my-mcp-server/src/
+```
+
+### 2.3 Customize and Register
+
+Each snippet includes:
+- Source URL linking to the original GitHub file
+- Working code ready to customize
+
+Modify the copied code:
+1. Update tool/resource/prompt names
+2. Adjust schemas for your API
+3. Implement your business logic
+4. Register with your server
+
+---
+
+## Phase 3: Test
+
+### 3.1 Build
+
+```bash
+npm run build
+```
+
+### 3.2 Test with MCP Inspector
+
+```bash
+npx @modelcontextprotocol/inspector@latest node dist/index.js
+```
+
+The Inspector lets you:
+- List and call tools
+- Browse resources
+- Test prompts
+- View server logs
+
+### 3.3 Quality Checklist
+
+- [ ] All tools have clear descriptions
+- [ ] Input schemas validate correctly
+- [ ] Error messages are actionable
+- [ ] Long operations report progress
+- [ ] Resources use appropriate MIME types
+
+---
+
+## Available Snippets Catalog
+
+### Server Setup
+
+| Name | Description |
+|------|-------------|
+| `server-setup` | Basic McpServer initialization with stdio transport, capabilities declaration, and clean shutdown |
+
+### Tools
+
+| Name | Description |
+|------|-------------|
+| `tool-basic` | Simple tool with Zod input schema (echo pattern) |
+| `tool-progress` | Long-running operation with progress notifications |
+| `tool-annotations` | Tool with readOnlyHint, destructiveHint, idempotentHint |
+| `tool-output-schema` | Tool with structured output schema for typed responses |
+
+### Resources
+
+| Name | Description |
+|------|-------------|
+| `resource-static` | Static resource from files or fixed data |
+| `resource-template` | Dynamic resource with URI template variables |
+
+### Prompts
+
+| Name | Description |
+|------|-------------|
+| `prompt-basic` | Simple prompt without arguments |
+| `prompt-args` | Prompt with required/optional arguments and auto-completion |
+
+---
+
+## Client Compatibility Matrix
+
+| Feature | Claude Desktop | Claude Code | MCP Inspector |
+|---------|---------------|-------------|---------------|
+| stdio transport | Yes | Yes | Yes |
+| Streamable HTTP | No | Yes | Yes |
+| Tools | Yes | Yes | Yes |
+| Resources | Limited | Yes | Yes |
+| Prompts | Yes | Yes | Yes |
+| Progress notifications | Yes | Yes | Yes |
+| Sampling (LLM calls) | Capability-dependent | Capability-dependent | Yes |
+| Elicitation (user input) | No | Capability-dependent | Yes |
+| Roots | No | Yes | Yes |
+
+**Notes:**
+- Claude Desktop primarily supports stdio transport
+- Advanced features like sampling require checking client capabilities at runtime
+- Use MCP Inspector for manual testing
+
+---
+
+## Reference Files
+
+For deeper guidance, load these reference documents:
+
+- [TypeScript SDK Patterns](./reference/typescript_sdk_patterns.md) - SDK imports, registration patterns, error handling
+- [MCP Primitives Guide](./reference/mcp_primitives_guide.md) - Tool, Resource, Prompt specifications from MCP spec
+- [Client Compatibility](./reference/client_compatibility.md) - Detailed host/client limitations and workarounds
+
+---
+
+## External Resources
+
+- [MCP Specification](https://modelcontextprotocol.io/specification) - Official protocol documentation
+- [Everything Server](https://github.com/modelcontextprotocol/servers/tree/main/src/everything) - Reference implementation (snippet source)
+- [TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) - Official SDK repository
+- [MCP Inspector](https://www.npmjs.com/package/@modelcontextprotocol/inspector) - Testing tool
