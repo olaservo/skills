@@ -1,6 +1,6 @@
 ---
 name: mcp-client-ts
-description: Build TypeScript MCP clients with composable code snippets. Use the add script to copy client setup and transport modules. Use when creating applications that connect to MCP servers.
+description: Build TypeScript MCP clients with composable code snippets. Includes agentic pattern with LLM integration. Use when creating applications that connect to MCP servers.
 ---
 
 # TypeScript MCP Client Builder
@@ -17,6 +17,18 @@ Build MCP (Model Context Protocol) clients in TypeScript using code snippets and
 ---
 
 ## Quick Start Decision Tree
+
+### Which Snippet Should I Start With?
+
+```
+Building an agentic app where an LLM decides when to use tools?
+  └─> Use client-with-llm snippet
+      Includes Claude integration, tool calling loop, interactive chat
+
+Just need direct MCP server access (no LLM)?
+  └─> Use client-setup snippet
+      Basic connection, manual tool/resource/prompt calls
+```
 
 ### Which Transport Should I Use?
 
@@ -50,7 +62,8 @@ Before writing code, understand:
 
 | Snippet | Description | Best For |
 |---------|-------------|----------|
-| `client-setup` | Basic Client with connection pattern | Starting any new client |
+| `client-setup` | Basic Client with connection pattern | Direct MCP access without LLM |
+| `client-with-llm` | Agentic client with Claude integration | LLM-powered tool calling apps |
 | `transport-stdio` | StdioClientTransport examples | Local/subprocess servers |
 | `transport-http` | StreamableHTTPClientTransport examples | Remote HTTP servers |
 
@@ -100,10 +113,16 @@ Copy snippets from this skill's `snippets/` directory into your project:
 ```
 snippets/
 ├── client/
-│   └── index.ts           # Basic client setup
+│   ├── index.ts           # Basic client setup
+│   └── with-llm.ts        # Agentic client with Claude
 └── transports/
     ├── stdio.ts           # Local process transport
     └── http.ts            # Remote HTTP transport
+```
+
+**Note:** The `client-with-llm` snippet requires additional dependencies:
+```bash
+npm install @anthropic-ai/sdk dotenv
 ```
 
 **Copy snippets to your project:**
@@ -157,11 +176,12 @@ node dist/index.js path/to/server.js
 
 ## Available Snippets Catalog
 
-### Client Setup
+### Client
 
 | Name | Description |
 |------|-------------|
 | `client-setup` | Basic MCP Client class with connection, tools, prompts, and resources methods |
+| `client-with-llm` | Full agentic client with Claude integration - LLM decides when to call MCP tools |
 
 ### Transports
 

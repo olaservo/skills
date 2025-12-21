@@ -5,6 +5,11 @@
       "localFile": "client/index.ts",
       "category": "client"
     },
+    "client-with-llm": {
+      "description": "Agentic client with Claude integration - LLM decides when to call tools",
+      "localFile": "client/with-llm.ts",
+      "category": "client"
+    },
     "transport-stdio": {
       "description": "StdioClientTransport for connecting to local process servers",
       "localFile": "transports/stdio.ts",
