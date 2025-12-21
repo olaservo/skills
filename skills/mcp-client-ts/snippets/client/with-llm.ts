@@ -6,15 +6,22 @@
  * This snippet demonstrates the full agentic pattern where Claude
  * decides when to call MCP tools based on user queries.
  *
- * Required dependencies:
- *   npm install @modelcontextprotocol/sdk @anthropic-ai/sdk dotenv
+ * Supports multiple Claude providers:
+ *   - Direct API (api.anthropic.com)
+ *   - AWS Bedrock
+ *   - Google Vertex AI
+ *   - Azure (Foundry)
+ *
+ * Required dependencies (install based on your provider):
+ *   npm install @modelcontextprotocol/sdk dotenv
+ *
+ *   # Choose ONE provider:
+ *   npm install @anthropic-ai/sdk            # Direct API
+ *   npm install @anthropic-ai/bedrock-sdk   # AWS Bedrock
+ *   npm install @anthropic-ai/vertex-sdk    # Google Vertex AI
+ *   npm install @anthropic-ai/foundry-sdk   # Azure (Foundry)
  */
 
-import { Anthropic } from "@anthropic-ai/sdk";
-import {
-  MessageParam,
-  Tool,
-} from "@anthropic-ai/sdk/resources/messages/messages.mjs";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import readline from "readline/promises";
@@ -22,22 +29,72 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const ANTHROPIC_MODEL = "claude-sonnet-4-5";
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-if (!ANTHROPIC_API_KEY) {
-  throw new Error("ANTHROPIC_API_KEY is not set");
-}
+// =============================================================================
+// PROVIDER CONFIGURATION
+// =============================================================================
+// Uncomment ONE of the following provider configurations:
+
+// -----------------------------------------------------------------------------
+// Option 1: Direct Anthropic API
+// Requires: npm install @anthropic-ai/sdk
+// Env vars: ANTHROPIC_API_KEY
+// -----------------------------------------------------------------------------
+import Anthropic from "@anthropic-ai/sdk";
+const anthropic = new Anthropic();
+const MODEL = "claude-sonnet-4-5";
+
+// -----------------------------------------------------------------------------
+// Option 2: AWS Bedrock
+// Requires: npm install @anthropic-ai/bedrock-sdk
+// Env vars: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
+// -----------------------------------------------------------------------------
+// import AnthropicBedrock from "@anthropic-ai/bedrock-sdk";
+// const anthropic = new AnthropicBedrock();
+// const MODEL = "anthropic.claude-3-5-sonnet-20241022-v2:0";
+
+// -----------------------------------------------------------------------------
+// Option 3: Google Vertex AI
+// Requires: npm install @anthropic-ai/vertex-sdk
+// Env vars: GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_REGION (or CLOUD_ML_REGION)
+// Auth: gcloud auth application-default login
+// -----------------------------------------------------------------------------
+// import { AnthropicVertex } from "@anthropic-ai/vertex-sdk";
+// const anthropic = new AnthropicVertex();
+// const MODEL = "claude-sonnet-4-5@20250514";
+
+// -----------------------------------------------------------------------------
+// Option 4: Azure (Foundry)
+// Requires: npm install @anthropic-ai/foundry-sdk
+// Env vars: ANTHROPIC_FOUNDRY_API_KEY, ANTHROPIC_FOUNDRY_RESOURCE
+// -----------------------------------------------------------------------------
+// import { AnthropicFoundry } from "@anthropic-ai/foundry-sdk";
+// const anthropic = new AnthropicFoundry({
+//   resource: process.env.ANTHROPIC_FOUNDRY_RESOURCE,
+// });
+// const MODEL = "claude-3-5-sonnet-20241022";
+
+// =============================================================================
+// MCP CLIENT
+// =============================================================================
+
+// Type for messages - same across all providers
+type MessageParam = {
+  role: "user" | "assistant";
+  content: string | Array<{ type: string; [key: string]: unknown }>;
+};
+
+type Tool = {
+  name: string;
+  description?: string;
+  input_schema: unknown;
+};
 
 class MCPClient {
   private mcp: Client;
-  private anthropic: Anthropic;
   private transport: StdioClientTransport | null = null;
   private tools: Tool[] = [];
 
   constructor() {
-    this.anthropic = new Anthropic({
-      apiKey: ANTHROPIC_API_KEY,
-    });
     this.mcp = new Client({ name: "mcp-client-cli", version: "1.0.0" });
   }
 
@@ -95,8 +152,8 @@ class MCPClient {
     ];
 
     // Initial Claude API call with tools
-    const response = await this.anthropic.messages.create({
-      model: ANTHROPIC_MODEL,
+    const response = await anthropic.messages.create({
+      model: MODEL,
       max_tokens: 1000,
       messages,
       tools: this.tools,
@@ -128,8 +185,8 @@ class MCPClient {
         });
 
         // Get Claude's response to the tool result
-        const followUp = await this.anthropic.messages.create({
-          model: ANTHROPIC_MODEL,
+        const followUp = await anthropic.messages.create({
+          model: MODEL,
           max_tokens: 1000,
           messages,
         });

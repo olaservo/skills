@@ -63,7 +63,7 @@ Before writing code, understand:
 | Snippet | Description | Best For |
 |---------|-------------|----------|
 | `client-setup` | Basic Client with connection pattern | Direct MCP access without LLM |
-| `client-with-llm` | Agentic client with Claude integration | LLM-powered tool calling apps |
+| `client-with-llm` | Agentic client with Claude (API/Bedrock/Vertex/Azure) | LLM-powered tool calling apps |
 | `transport-stdio` | StdioClientTransport examples | Local/subprocess servers |
 | `transport-http` | StreamableHTTPClientTransport examples | Remote HTTP servers |
 
@@ -120,9 +120,15 @@ snippets/
     └── http.ts            # Remote HTTP transport
 ```
 
-**Note:** The `client-with-llm` snippet requires additional dependencies:
+**Note:** The `client-with-llm` snippet requires a Claude provider SDK:
 ```bash
-npm install @anthropic-ai/sdk dotenv
+npm install dotenv
+
+# Choose ONE provider:
+npm install @anthropic-ai/sdk            # Direct API
+npm install @anthropic-ai/bedrock-sdk   # AWS Bedrock
+npm install @anthropic-ai/vertex-sdk    # Google Vertex AI
+npm install @anthropic-ai/foundry-sdk   # Azure (Foundry)
 ```
 
 **Copy snippets to your project:**
@@ -181,7 +187,7 @@ node dist/index.js path/to/server.js
 | Name | Description |
 |------|-------------|
 | `client-setup` | Basic MCP Client class with connection, tools, prompts, and resources methods |
-| `client-with-llm` | Full agentic client with Claude integration - LLM decides when to call MCP tools |
+| `client-with-llm` | Agentic client with Claude (supports API, Bedrock, Vertex, Azure) |
 
 ### Transports
 
