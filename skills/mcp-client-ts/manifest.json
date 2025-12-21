@@ -1,0 +1,19 @@
+{
+  "snippets": {
+    "client-setup": {
+      "description": "Basic MCP client with capability declaration and connection pattern",
+      "localFile": "client/index.ts",
+      "category": "client"
+    },
+    "transport-stdio": {
+      "description": "StdioClientTransport for connecting to local process servers",
+      "localFile": "transports/stdio.ts",
+      "category": "transports"
+    },
+    "transport-http": {
+      "description": "StreamableHTTPClientTransport for connecting to remote HTTP servers",
+      "localFile": "transports/http.ts",
+      "category": "transports"
+    }
+  }
+}
