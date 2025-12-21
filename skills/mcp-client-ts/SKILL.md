@@ -106,6 +106,34 @@ Update `package.json`:
 }
 ```
 
+Create `.env` for API keys (choose based on your provider):
+```bash
+# Direct API
+ANTHROPIC_API_KEY=your-api-key
+
+# AWS Bedrock
+AWS_ACCESS_KEY_ID=your-access-key
+AWS_SECRET_ACCESS_KEY=your-secret-key
+AWS_REGION=us-east-1
+
+# Google Vertex AI
+GOOGLE_CLOUD_PROJECT=your-project-id
+GOOGLE_CLOUD_REGION=us-central1
+
+# Azure (Foundry)
+ANTHROPIC_FOUNDRY_API_KEY=your-api-key
+ANTHROPIC_FOUNDRY_RESOURCE=your-resource.azure.anthropic.com
+```
+
+Create `.gitignore`:
+```
+node_modules/
+dist/
+build/
+.env
+*.log
+```
+
 ### 2.2 Add Snippets
 
 Copy snippets from this skill's `snippets/` directory into your project:
