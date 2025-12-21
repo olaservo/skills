@@ -80,11 +80,10 @@ Review the snippet catalog below to identify patterns that match your needs:
 ### 1.3 Check Client Compatibility
 
 Use the MCP docs server to look up current client capabilities:
-- Query for "Claude Desktop capabilities" or "Claude Code MCP support"
+- Query for "Example clients" to get a full list of clients and supported features
+- Query for the client name that you'd like to use
 - Check transport support (stdio vs Streamable HTTP)
 - Verify feature support (tools, resources, prompts, sampling, etc.)
-
-> **Note:** Client capabilities change frequently. Always check the latest MCP documentation rather than relying on static compatibility matrices.
 
 ---
 
