@@ -196,6 +196,8 @@ npm run build
 
 ### 3.2 Test Connection
 
+> **Required:** The `client-with-llm` snippet requires `ANTHROPIC_API_KEY` (or equivalent provider credentials) in your `.env` file before testing. Without it, you'll get: `Could not resolve authentication method`.
+
 ```bash
 # Interactive mode with a local server
 node dist/index.js path/to/server.js

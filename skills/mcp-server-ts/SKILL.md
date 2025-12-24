@@ -205,6 +205,34 @@ The Inspector lets you:
 - [ ] Long operations report progress
 - [ ] Resources use appropriate MIME types
 
+### 3.4 Writing Good Tool Descriptions
+
+When an LLM client connects to your server, it uses your tool descriptions to decide which tools to call. Small refinements to descriptions can yield dramatic improvements in tool selection accuracy.
+
+**Think like you're onboarding a new hire.** Make implicit context explicit—specialized query formats, niche terminology, and expected behaviors should all be clearly stated.
+
+**Parameter naming matters:**
+- Avoid generic names like `user` → use `user_id`
+- Prefer semantic names (`file_type`) over technical ones (`mime_type`)
+- Use natural language identifiers over cryptic codes
+
+**Provide actionable error messages** that guide the agent toward correct usage, not opaque error codes.
+
+```typescript
+// Bad - vague description, unclear parameters
+server.tool("process", { data: z.string() }, async ({ data }) => { ... });
+
+// Good - clear purpose, descriptive parameters
+server.tool(
+  "convert_markdown_to_html",
+  "Convert markdown text to HTML for rendering. Use when displaying user-generated content.",
+  { markdown_text: z.string().describe("Raw markdown to convert") },
+  async ({ markdown_text }) => { ... }
+);
+```
+
+See: [Writing Tools for Agents](https://www.anthropic.com/engineering/writing-tools-for-agents) for more guidance.
+
 ---
 
 ## Available Snippets Catalog
