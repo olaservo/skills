@@ -40,6 +40,7 @@ dotenv.config();
 // Env vars: ANTHROPIC_API_KEY
 // -----------------------------------------------------------------------------
 import Anthropic from "@anthropic-ai/sdk";
+import type { MessageParam, Tool } from "@anthropic-ai/sdk/resources/messages.js";
 const anthropic = new Anthropic();
 const MODEL = "claude-sonnet-4-5";
 
@@ -49,6 +50,7 @@ const MODEL = "claude-sonnet-4-5";
 // Env vars: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
 // -----------------------------------------------------------------------------
 // import AnthropicBedrock from "@anthropic-ai/bedrock-sdk";
+// import type { MessageParam, Tool } from "@anthropic-ai/bedrock-sdk/resources/messages.js";
 // const anthropic = new AnthropicBedrock();
 // const MODEL = "anthropic.claude-3-5-sonnet-20241022-v2:0";
 
@@ -59,6 +61,7 @@ const MODEL = "claude-sonnet-4-5";
 // Auth: gcloud auth application-default login
 // -----------------------------------------------------------------------------
 // import { AnthropicVertex } from "@anthropic-ai/vertex-sdk";
+// import type { MessageParam, Tool } from "@anthropic-ai/vertex-sdk/resources/messages.js";
 // const anthropic = new AnthropicVertex();
 // const MODEL = "claude-sonnet-4-5@20250514";
 
@@ -68,6 +71,7 @@ const MODEL = "claude-sonnet-4-5";
 // Env vars: ANTHROPIC_FOUNDRY_API_KEY, ANTHROPIC_FOUNDRY_RESOURCE
 // -----------------------------------------------------------------------------
 // import { AnthropicFoundry } from "@anthropic-ai/foundry-sdk";
+// import type { MessageParam, Tool } from "@anthropic-ai/foundry-sdk/resources/messages.js";
 // const anthropic = new AnthropicFoundry({
 //   resource: process.env.ANTHROPIC_FOUNDRY_RESOURCE,
 // });
@@ -76,18 +80,6 @@ const MODEL = "claude-sonnet-4-5";
 // =============================================================================
 // MCP CLIENT
 // =============================================================================
-
-// Type for messages - same across all providers
-type MessageParam = {
-  role: "user" | "assistant";
-  content: string | Array<{ type: string; [key: string]: unknown }>;
-};
-
-type Tool = {
-  name: string;
-  description?: string;
-  input_schema: unknown;
-};
 
 class MCPClient {
   private mcp: Client;
@@ -125,7 +117,7 @@ class MCPClient {
     this.tools = toolsResult.tools.map((tool) => ({
       name: tool.name,
       description: tool.description,
-      input_schema: tool.inputSchema,
+      input_schema: tool.inputSchema as Tool["input_schema"],
     }));
 
     console.log(
@@ -137,11 +129,11 @@ class MCPClient {
   /**
    * Process a query using Claude and available MCP tools
    *
-   * Flow:
-   * 1. Send user query + tool definitions to Claude
-   * 2. If Claude returns tool_use, execute via MCP
-   * 3. Send tool results back to Claude
-   * 4. Return final response
+   * Implements proper agentic loop:
+   * 1. Send query to Claude with available tools
+   * 2. If Claude requests tools, execute ALL of them
+   * 3. Send tool results back using proper tool_result format
+   * 4. Repeat until Claude stops requesting tools
    */
   async processQuery(query: string): Promise<string> {
     const messages: MessageParam[] = [
@@ -151,8 +143,7 @@ class MCPClient {
       },
     ];
 
-    // Initial Claude API call with tools
-    const response = await anthropic.messages.create({
+    let response = await anthropic.messages.create({
       model: MODEL,
       max_tokens: 1000,
       messages,
@@ -161,39 +152,61 @@ class MCPClient {
 
     const finalText: string[] = [];
 
-    for (const content of response.content) {
-      if (content.type === "text") {
-        finalText.push(content.text);
-      } else if (content.type === "tool_use") {
-        // Execute tool call via MCP
-        const toolName = content.name;
-        const toolArgs = content.input as Record<string, unknown> | undefined;
+    // Agentic loop - continue until no more tool calls
+    while (response.stop_reason === "tool_use") {
+      // Collect all tool results from this response
+      const toolResultContent: Array<{
+        type: "tool_result";
+        tool_use_id: string;
+        content: string;
+      }> = [];
 
-        const result = await this.mcp.callTool({
-          name: toolName,
-          arguments: toolArgs,
-        });
+      for (const block of response.content) {
+        if (block.type === "text") {
+          finalText.push(block.text);
+        } else if (block.type === "tool_use") {
+          finalText.push(
+            `[Calling tool ${block.name} with args ${JSON.stringify(block.input)}]`
+          );
 
-        finalText.push(
-          `[Calling tool ${toolName} with args ${JSON.stringify(toolArgs)}]`
-        );
+          const result = await this.mcp.callTool({
+            name: block.name,
+            arguments: block.input as Record<string, unknown>,
+          });
 
-        // Send tool result back to Claude
-        messages.push({
-          role: "user",
-          content: result.content as string,
-        });
-
-        // Get Claude's response to the tool result
-        const followUp = await anthropic.messages.create({
-          model: MODEL,
-          max_tokens: 1000,
-          messages,
-        });
-
-        if (followUp.content[0]?.type === "text") {
-          finalText.push(followUp.content[0].text);
+          toolResultContent.push({
+            type: "tool_result",
+            tool_use_id: block.id,
+            content: JSON.stringify(result.content),
+          });
         }
+      }
+
+      // Add assistant response to history (includes tool_use blocks)
+      messages.push({
+        role: "assistant",
+        content: response.content,
+      });
+
+      // Add all tool results as a single user message
+      messages.push({
+        role: "user",
+        content: toolResultContent,
+      });
+
+      // Get next response from Claude
+      response = await anthropic.messages.create({
+        model: MODEL,
+        max_tokens: 1000,
+        messages,
+        tools: this.tools,
+      });
+    }
+
+    // Extract final text from the last response
+    for (const block of response.content) {
+      if (block.type === "text") {
+        finalText.push(block.text);
       }
     }
 
