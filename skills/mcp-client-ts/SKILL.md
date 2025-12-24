@@ -271,6 +271,30 @@ const result = await client.callTool({ name: "tool-name", arguments: {} });
 await client.close();
 ```
 
+### Server Instructions
+
+MCP servers can provide instructions that describe how to use their tools effectively. These are returned during initialization and should be included in LLM system prompts:
+
+```typescript
+// After connecting, retrieve server instructions
+const instructions = client.getInstructions();
+
+if (instructions) {
+  console.log("Server instructions:", instructions);
+  // Include in your LLM's system prompt for better tool usage
+}
+```
+
+The `client-with-llm` snippet automatically includes server instructions in the Claude system prompt. If you want to add a base system prompt along with server instructions:
+
+```typescript
+// Set a base system prompt (optional)
+mcpClient.setSystemPrompt("You are a helpful assistant with access to MCP tools.");
+
+// Server instructions will be appended automatically
+// when processQuery() calls Claude
+```
+
 ---
 
 ## Reference Files

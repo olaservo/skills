@@ -123,6 +123,65 @@ const resources = await client.listResources();
 const resource = await client.readResource({
   uri: "file:///path/to/resource",
 });
+
+// Server instructions (available after connection)
+const instructions = client.getInstructions();
+if (instructions) {
+  // Include in LLM system prompt for better tool usage
+  console.log("Server instructions:", instructions);
+}
+```
+
+---
+
+## Server Instructions
+
+MCP servers can provide optional instructions that describe how to use their tools effectively. Instructions are returned during the initialization handshake and can improve LLM tool usage when included in system prompts.
+
+### Retrieving Instructions
+
+```typescript
+// Connect to server
+await client.connect(transport);
+
+// Get server instructions (may be undefined)
+const instructions = client.getInstructions();
+
+if (instructions) {
+  console.log("Server provided instructions:", instructions);
+}
+```
+
+### Using Instructions with LLMs
+
+Include server instructions in your LLM's system prompt for better tool usage:
+
+```typescript
+// Basic pattern: combine with your own system prompt
+function buildSystemPrompt(basePrompt: string, serverInstructions?: string): string {
+  if (!serverInstructions) {
+    return basePrompt;
+  }
+  return `${basePrompt}\n\n## MCP Server Instructions\n${serverInstructions}`;
+}
+
+// Use in Claude API call
+const response = await anthropic.messages.create({
+  model: "claude-sonnet-4-5",
+  max_tokens: 1000,
+  system: buildSystemPrompt("You are a helpful assistant with access to MCP tools.", client.getInstructions()),
+  messages: [...],
+  tools: [...],
+});
+```
+
+### Example: server-everything Instructions
+
+The `@modelcontextprotocol/server-everything` test server provides sample instructions:
+
+```bash
+npx -y @modelcontextprotocol/server-everything
+# Server provides instructions describing its tools and usage patterns
 ```
 
 ---

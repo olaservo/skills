@@ -85,6 +85,16 @@ class MCPClient {
   }
 
   /**
+   * Get server instructions (if provided during initialization)
+   *
+   * Server instructions describe how to use the server's tools effectively.
+   * They can be included in LLM system prompts to improve tool usage.
+   */
+  getServerInstructions(): string | undefined {
+    return this.client.getInstructions();
+  }
+
+  /**
    * Close the connection and clean up
    */
   async close(): Promise<void> {
@@ -99,6 +109,12 @@ async function main() {
   try {
     // Connect to a local MCP server
     await client.connect("node", ["path/to/server.js"]);
+
+    // Get server instructions (if provided)
+    const instructions = client.getServerInstructions();
+    if (instructions) {
+      console.log("Server instructions:", instructions);
+    }
 
     // List available tools
     const tools = await client.listTools();

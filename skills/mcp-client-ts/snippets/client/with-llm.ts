@@ -85,9 +85,35 @@ class MCPClient {
   private mcp: Client;
   private transport: StdioClientTransport | null = null;
   private tools: Tool[] = [];
+  private serverInstructions: string | undefined;
+  private systemPrompt: string | undefined;
 
   constructor() {
     this.mcp = new Client({ name: "mcp-client-cli", version: "1.0.0" });
+  }
+
+  /**
+   * Set a base system prompt that will be combined with server instructions
+   */
+  setSystemPrompt(prompt: string): void {
+    this.systemPrompt = prompt;
+  }
+
+  /**
+   * Get the combined system prompt (base prompt + server instructions)
+   */
+  private getFullSystemPrompt(): string | undefined {
+    if (!this.systemPrompt && !this.serverInstructions) {
+      return undefined;
+    }
+    const parts: string[] = [];
+    if (this.systemPrompt) {
+      parts.push(this.systemPrompt);
+    }
+    if (this.serverInstructions) {
+      parts.push(`## MCP Server Instructions\n${this.serverInstructions}`);
+    }
+    return parts.join("\n\n");
   }
 
   /**
@@ -120,6 +146,12 @@ class MCPClient {
 
     this.transport = new StdioClientTransport({ command, args });
     await this.mcp.connect(this.transport);
+
+    // Capture server instructions (if provided)
+    this.serverInstructions = this.mcp.getInstructions();
+    if (this.serverInstructions) {
+      console.log("Server provided instructions for tool usage");
+    }
 
     // Convert MCP tools to Anthropic tool format
     const toolsResult = await this.mcp.listTools();
@@ -155,6 +187,7 @@ class MCPClient {
     let response = await anthropic.messages.create({
       model: MODEL,
       max_tokens: 1000,
+      system: this.getFullSystemPrompt(),
       messages,
       tools: this.tools,
     });
@@ -207,6 +240,7 @@ class MCPClient {
       response = await anthropic.messages.create({
         model: MODEL,
         max_tokens: 1000,
+        system: this.getFullSystemPrompt(),
         messages,
         tools: this.tools,
       });
