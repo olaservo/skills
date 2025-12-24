@@ -92,24 +92,33 @@ class MCPClient {
 
   /**
    * Connect to an MCP server and load available tools
+   *
+   * Supports:
+   *   - Node.js scripts: path/to/server.js
+   *   - Python scripts: path/to/server.py
+   *   - NPX packages: @modelcontextprotocol/server-everything
    */
-  async connectToServer(serverScriptPath: string) {
-    const isJs = serverScriptPath.endsWith(".js");
-    const isPy = serverScriptPath.endsWith(".py");
-    if (!isJs && !isPy) {
-      throw new Error("Server script must be a .js or .py file");
+  async connectToServer(serverPath: string) {
+    const isJs = serverPath.endsWith(".js");
+    const isPy = serverPath.endsWith(".py");
+    const isNpx = !isJs && !isPy;
+
+    let command: string;
+    let args: string[];
+
+    if (isPy) {
+      command = process.platform === "win32" ? "python" : "python3";
+      args = [serverPath];
+    } else if (isJs) {
+      command = process.execPath;
+      args = [serverPath];
+    } else {
+      // NPX package (e.g., @modelcontextprotocol/server-everything)
+      command = "npx";
+      args = ["-y", serverPath];
     }
 
-    const command = isPy
-      ? process.platform === "win32"
-        ? "python"
-        : "python3"
-      : process.execPath;
-
-    this.transport = new StdioClientTransport({
-      command,
-      args: [serverScriptPath],
-    });
+    this.transport = new StdioClientTransport({ command, args });
     await this.mcp.connect(this.transport);
 
     // Convert MCP tools to Anthropic tool format
@@ -247,21 +256,37 @@ class MCPClient {
 // Main entry point
 async function main() {
   if (process.argv.length < 3) {
-    console.log("Usage: node build/index.js <path_to_server_script>");
+    console.log("Usage: node dist/index.js <server> [query]");
+    console.log("  server: path/to/server.js, path/to/server.py, or npm-package-name");
+    console.log("  query:  optional - run single query and exit (non-interactive)");
+    console.log("");
+    console.log("Examples:");
+    console.log("  node dist/index.js @modelcontextprotocol/server-everything");
+    console.log('  node dist/index.js @modelcontextprotocol/server-everything "add 5 and 3"');
     return;
   }
 
   const mcpClient = new MCPClient();
+  const server = process.argv[2];
+  const query = process.argv[3];
+
   try {
-    await mcpClient.connectToServer(process.argv[2]);
-    await mcpClient.chatLoop();
+    await mcpClient.connectToServer(server);
+
+    if (query) {
+      // Non-interactive: run single query and exit
+      const response = await mcpClient.processQuery(query);
+      console.log("\n" + response);
+    } else {
+      // Interactive mode
+      await mcpClient.chatLoop();
+    }
   } catch (e) {
     console.error("Error:", e);
     await mcpClient.cleanup();
     process.exit(1);
   } finally {
     await mcpClient.cleanup();
-    process.exit(0);
   }
 }
 

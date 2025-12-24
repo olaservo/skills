@@ -76,10 +76,13 @@ Before writing code, understand:
 ```bash
 mkdir my-mcp-client && cd my-mcp-client
 npm init -y
-npm install @modelcontextprotocol/sdk
+npm install @modelcontextprotocol/sdk @anthropic-ai/sdk dotenv
 npm install -D typescript @types/node
 npx tsc --init
+mkdir src
 ```
+
+> **Note:** The above installs the direct Anthropic API SDK. For other providers, see the provider options in the `client-with-llm` snippet.
 
 Update `tsconfig.json`:
 ```json
@@ -88,10 +91,14 @@ Update `tsconfig.json`:
     "target": "ES2022",
     "module": "Node16",
     "moduleResolution": "Node16",
+    "rootDir": "./src",
     "outDir": "./dist",
     "strict": true,
-    "esModuleInterop": true
-  }
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": ["src/**/*"]
 }
 ```
 
@@ -190,11 +197,14 @@ npm run build
 ### 3.2 Test Connection
 
 ```bash
-# Run your client
-node dist/index.js
-
-# Or with a server path argument
+# Interactive mode with a local server
 node dist/index.js path/to/server.js
+
+# Interactive mode with an npx package
+node dist/index.js @modelcontextprotocol/server-everything
+
+# Non-interactive mode (single query)
+node dist/index.js @modelcontextprotocol/server-everything "add 5 and 3"
 ```
 
 ### 3.3 Quality Checklist
