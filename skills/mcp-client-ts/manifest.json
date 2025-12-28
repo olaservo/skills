@@ -19,6 +19,31 @@
       "description": "StreamableHTTPClientTransport for connecting to remote HTTP servers",
       "localFile": "transports/http.ts",
       "category": "transports"
+    },
+    "sampling-handler": {
+      "description": "Handle sampling/createMessage requests from servers - integrate with Claude API",
+      "localFile": "handlers/sampling.ts",
+      "category": "handlers"
+    },
+    "elicitation-handler": {
+      "description": "Handle elicitation/create requests (form and URL modes) for user input",
+      "localFile": "handlers/elicitation.ts",
+      "category": "handlers"
+    },
+    "roots-handler": {
+      "description": "Expose filesystem roots to servers with change notifications",
+      "localFile": "handlers/roots.ts",
+      "category": "handlers"
+    },
+    "list-changed": {
+      "description": "React to dynamic tool/prompt/resource changes with listChanged handlers",
+      "localFile": "features/list-changed.ts",
+      "category": "features"
+    },
+    "subscriptions": {
+      "description": "Subscribe to resource updates with reactive patterns",
+      "localFile": "features/subscriptions.ts",
+      "category": "features"
     }
   }
 }

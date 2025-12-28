@@ -1,11 +1,13 @@
 ---
 name: mcp-client-ts
-description: Build TypeScript MCP clients with composable code snippets. Includes agentic pattern with LLM integration. Use when creating applications that connect to MCP servers.
+description: Build TypeScript MCP clients with composable code snippets. Includes agentic pattern with LLM integration, server-initiated requests (sampling, elicitation), and dynamic discovery. Use when creating applications that connect to MCP servers.
 ---
 
 # TypeScript MCP Client Builder
 
 Build MCP (Model Context Protocol) clients in TypeScript using code snippets and patterns from the official SDK.
+
+**Now includes advanced capability support:** sampling handlers, elicitation, roots, dynamic discovery, and resource subscriptions.
 
 ## How It Works
 
@@ -66,6 +68,11 @@ Before writing code, understand:
 | `client-with-llm` | Agentic client with Claude (API/Bedrock/Vertex/Azure) | LLM-powered tool calling apps |
 | `transport-stdio` | StdioClientTransport examples | Local/subprocess servers |
 | `transport-http` | StreamableHTTPClientTransport examples | Remote HTTP servers |
+| `sampling-handler` | Handle server-initiated LLM requests | Servers that need Claude completions |
+| `elicitation-handler` | Handle user input requests (form/URL) | OAuth, confirmations, data collection |
+| `roots-handler` | Expose filesystem directories | IDE integrations, file tools |
+| `list-changed` | React to dynamic capability changes | Real-time tool/resource updates |
+| `subscriptions` | Subscribe to resource updates | Live data feeds, monitoring |
 
 ---
 
@@ -333,3 +340,110 @@ Query the docs server for:
 - [TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) - Official SDK repository
 - [Build a Client Tutorial](https://modelcontextprotocol.io/docs/develop/build-client) - Step-by-step guide
 - [Client Examples](https://github.com/modelcontextprotocol/typescript-sdk/tree/main/examples/client) - Runnable examples
+
+---
+
+## Building More Capable Clients
+
+Most MCP clients only implement basic features. To build a **more capable** client that stands out, implement these advanced capabilities:
+
+### Capability Declaration
+
+Declare capabilities during client initialization to enable server-initiated requests:
+
+```typescript
+const client = new Client(
+  { name: 'my-client', version: '1.0.0' },
+  {
+    capabilities: {
+      // Allow server to request LLM completions
+      sampling: {},
+
+      // Allow server to request user input
+      elicitation: {
+        form: {},   // Structured input
+        url: {}     // URL redirects (OAuth)
+      },
+
+      // Expose filesystem roots
+      roots: {
+        listChanged: true  // Notify on changes
+      }
+    }
+  }
+);
+```
+
+### Server-Initiated Requests
+
+**Sampling** - Servers can request LLM completions:
+```typescript
+import { CreateMessageRequestSchema } from '@modelcontextprotocol/sdk/client/index.js';
+
+client.setRequestHandler(CreateMessageRequestSchema, async (request) => {
+  // Call Claude API with request.params.messages
+  return { role: 'assistant', content: { type: 'text', text: response }, model: 'claude-...' };
+});
+```
+
+**Elicitation** - Servers can request user input:
+```typescript
+import { ElicitRequestSchema } from '@modelcontextprotocol/sdk/client/index.js';
+
+client.setRequestHandler(ElicitRequestSchema, async (request) => {
+  // Prompt user based on request.params.requestedSchema
+  return { action: 'accept', content: { confirm: true } };
+});
+```
+
+### Dynamic Discovery
+
+React to server capability changes in real-time:
+
+```typescript
+const client = new Client(
+  { name: 'my-client', version: '1.0.0' },
+  {
+    capabilities: {},
+    listChanged: {
+      tools: {
+        autoRefresh: true,
+        onChanged: (err, tools) => {
+          console.log('Tools updated:', tools?.map(t => t.name));
+        }
+      }
+    }
+  }
+);
+```
+
+### Resource Subscriptions
+
+Subscribe to resources for live updates:
+
+```typescript
+// Check if server supports subscriptions
+const caps = client.getServerCapabilities();
+if (caps?.resources?.subscribe) {
+  await client.subscribeResource({ uri: 'file:///data.json' });
+
+  client.setNotificationHandler(
+    { method: 'notifications/resources/updated' },
+    async (notification) => {
+      const content = await client.readResource({ uri: notification.params.uri });
+      console.log('Resource updated:', content);
+    }
+  );
+}
+```
+
+### Use Case Examples
+
+Beyond chatbots, capable MCP clients can power:
+
+- **IDE Integrations**: Expose project roots, handle file operations, provide completions
+- **Workflow Automation**: Orchestrate multi-tool workflows, handle confirmations via elicitation
+- **Monitoring Dashboards**: Subscribe to resources for live data, receive server logs
+- **AI-Powered CLI Tools**: Use sampling for intelligent command suggestions
+
+See the [MCP Reference Client](https://github.com/modelcontextprotocol/quickstart-resources) for a complete implementation.
