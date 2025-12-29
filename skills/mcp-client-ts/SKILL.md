@@ -68,11 +68,13 @@ Before writing code, understand:
 | `client-with-llm` | Agentic client with Claude (API/Bedrock/Vertex/Azure) | LLM-powered tool calling apps |
 | `transport-stdio` | StdioClientTransport examples | Local/subprocess servers |
 | `transport-http` | StreamableHTTPClientTransport examples | Remote HTTP servers |
-| `sampling-handler` | Handle server-initiated LLM requests | Servers that need Claude completions |
+| `sampling-handler` | Handle sampling requests with tool support (MCP 2025-11-25) | Servers that need Claude completions |
 | `elicitation-handler` | Handle user input requests (form/URL) | OAuth, confirmations, data collection |
 | `roots-handler` | Expose filesystem directories | IDE integrations, file tools |
 | `list-changed` | React to dynamic capability changes | Real-time tool/resource updates |
 | `subscriptions` | Subscribe to resource updates | Live data feeds, monitoring |
+| `logging` | Receive server log messages with level filtering | Debugging, monitoring |
+| `completions` | Argument autocomplete with interactive picker | IDE-like experiences |
 
 ---
 
@@ -243,6 +245,23 @@ node dist/index.js @modelcontextprotocol/server-everything "add 5 and 3"
 | `transport-stdio` | StdioClientTransport for Node.js, Python, and npx-based servers |
 | `transport-http` | StreamableHTTPClientTransport for remote servers with OAuth and fallback patterns |
 
+### Handlers (Server-Initiated Requests)
+
+| Name | Description |
+|------|-------------|
+| `sampling-handler` | Handle sampling/createMessage requests with tool support (MCP 2025-11-25) |
+| `elicitation-handler` | Handle elicitation/create requests for user input (form and URL modes) |
+| `roots-handler` | Expose filesystem roots to servers with change notifications |
+
+### Features (Dynamic Discovery & Monitoring)
+
+| Name | Description |
+|------|-------------|
+| `list-changed` | React to dynamic tool/prompt/resource changes with listChanged handlers |
+| `subscriptions` | Subscribe to resource updates with reactive patterns |
+| `logging` | Receive server log messages with level filtering |
+| `completions` | Argument autocomplete for prompts and resources with interactive picker |
+
 ---
 
 ## Quick Reference
@@ -356,8 +375,8 @@ const client = new Client(
   { name: 'my-client', version: '1.0.0' },
   {
     capabilities: {
-      // Allow server to request LLM completions
-      sampling: {},
+      // Allow server to request LLM completions (with tool support - MCP 2025-11-25)
+      sampling: { tools: {} },
 
       // Allow server to request user input
       elicitation: {

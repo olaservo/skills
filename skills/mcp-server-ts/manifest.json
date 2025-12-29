@@ -55,6 +55,11 @@
       "localFile": "prompts/args.ts",
       "remoteFiles": ["prompts/args.ts"],
       "category": "prompts"
+    },
+    "tool-agentic-sampling": {
+      "description": "Agentic tool using sampling with tools - LLM executes server tools in a loop (MCP 2025-11-25)",
+      "localFile": "tools/agentic-sampling.ts",
+      "category": "tools"
     }
   }
 }

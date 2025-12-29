@@ -76,6 +76,7 @@ Review the snippet catalog below to identify patterns that match your needs:
 | `resource-template` | Dynamic URI template resource | Parameterized data access |
 | `prompt-basic` | Simple prompt | Basic user commands |
 | `prompt-args` | Prompt with arguments | Parameterized commands |
+| `tool-agentic-sampling` | Agentic tool with LLM sampling loop | Server-driven AI workflows |
 
 ### 1.3 Check Client Compatibility
 
@@ -251,6 +252,7 @@ See: [Writing Tools for Agents](https://www.anthropic.com/engineering/writing-to
 | `tool-progress` | Long-running operation with progress notifications |
 | `tool-annotations` | Tool with readOnlyHint, destructiveHint, idempotentHint |
 | `tool-output-schema` | Tool with structured output schema for typed responses |
+| `tool-agentic-sampling` | Agentic tool using sampling with tools - LLM executes server tools in a loop (MCP 2025-11-25) |
 
 ### Resources
 

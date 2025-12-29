@@ -21,7 +21,7 @@
       "category": "transports"
     },
     "sampling-handler": {
-      "description": "Handle sampling/createMessage requests from servers - integrate with Claude API",
+      "description": "Handle sampling/createMessage requests with tool support - Claude API integration (MCP 2025-11-25)",
       "localFile": "handlers/sampling.ts",
       "category": "handlers"
     },
@@ -43,6 +43,16 @@
     "subscriptions": {
       "description": "Subscribe to resource updates with reactive patterns",
       "localFile": "features/subscriptions.ts",
+      "category": "features"
+    },
+    "logging": {
+      "description": "Receive server log messages with level filtering",
+      "localFile": "features/logging.ts",
+      "category": "features"
+    },
+    "completions": {
+      "description": "Argument autocomplete for prompts and resources with interactive picker",
+      "localFile": "features/completions.ts",
       "category": "features"
     }
   }
